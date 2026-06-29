@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           # REEMPLAZA: Pon tu usuario/organización y el nombre del repositorio de Cypress
-          repository: 'alunai-lang/c15'
+          repository: 'OwenVega/cypress15'
           # REEMPLAZA: Crea un GitHub Personal Access Token (PAT) y guárdalo en Settings -> Secrets
           token: ${{ secrets.MI_GITHUB_TOKEN_REPOS }}
           path: 'cypress-tests' # Descarga las pruebas en esta subcarpeta

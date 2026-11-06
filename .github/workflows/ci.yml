@@ -1,4 +1,3 @@
-  
 name: React CI/CD Pipeline with software testing and DevSecOps
 
 # This triggers the workflow on pushes and pull requests to the main branch
@@ -12,8 +11,29 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-bill-of-materials
+          path: sbom.spdx.json
+
   dependency-audit:
     name: Audit npm dependencies
     runs-on: ubuntu-latest
@@ -60,22 +80,22 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest  # This specifies the OS for the job
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # Checks out the code from your repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2  # Sets up the Node.js environment
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'  # Specifies the version of Node.js
+          node-version: '16'
 
       - name: Install dependencies
-        run: npm install  # Installs the required dependencies
+        run: npm install
 
       - name: Build the app
-        run: npm run build  # Builds the React app for production
+        run: npm run build
 
   tests:
     name: Run Tests
@@ -84,10 +104,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - name: Use Node.js 18.x to run Test
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: 'npm'
@@ -98,28 +118,25 @@ jobs:
       - name: Run Tests
         run: npm run test
 
-      #- name: Build the app
-      #  run: npm run build  # Builds the React app for production
-  # Job to deploy the application after build
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [tests, dependency-audit, secret-scan]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [tests, dependency-audit, secret-scan, sbom]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     outputs:
       vercel_url: ${{ steps.deploy-vercel.outputs.DEPLOY_URL }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 #  Re-checks out the code for deployment
+        uses: actions/checkout@v4
 
       - name: Deploy to Vercel
         id: deploy-vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        # 💡 Usamos --confirm y limpiamos la salida para extraer SOLO la URL limpia
         run: |
-          URL=$(npx vercel --prod --yes --token $VERCEL_TOKEN | tail -n 1)
+          set -e
+          URL=$(npx vercel --prod --yes --token "$VERCEL_TOKEN" | tail -n 1)
           echo "DEPLOY_URL=$URL" >> $GITHUB_OUTPUT
 
   cypress-e2e:
@@ -151,13 +168,11 @@ jobs:
           CYPRESS_BASE_URL: ${{ needs.deploy.outputs.vercel_url }}
           CYPRESS_SCREENSHOT_ON_RUN_FAILURE: false
           CYPRESS_VIDEO: false
-          # 💡 Evita problemas de renderizado de fuentes/gráficas virtuales en Linux sin GUI
           ELECTRON_DISABLE_GPU: 1
-          DISABLE_X1IR_WORKAROUNDS: true
+          DISABLE_X11R_WORKAROUNDS: true
         with:
           install: false
           component: false
           record: false
           publish-summary: true
-          # 💡 Forzamos el uso de Chrome en lugar de Electron, ya que gestiona mejor la memoria en GitHub Actions
-          browser: chrome 
+          browser: chrome

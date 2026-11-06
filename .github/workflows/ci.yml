@@ -83,7 +83,7 @@ jobs:
       - name: Checkout Cypress repo
         uses: actions/checkout@v4
         with:
-          repository: 'alunai-lang/agregar_repo_cypress'
+          repository: 'OwenVega/cypress15'
           token: ${{ secrets.MI_GITHUB_TOKEN_REPOS }}
 
       - name: Set up Node.js

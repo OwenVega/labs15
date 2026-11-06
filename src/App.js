@@ -11,11 +11,12 @@ const formReducer = (state, event) => {
 }
 
   const distribuidores = [
-      { id: 'Select', displayName: 'Select' },
+    { id: 'Select', displayName: 'Select' },
     { id: 'Ropa', displayName: 'Ropa' },
-    { id: 'Laptops ', displayName: 'Laptop' }, 
-    { id: 'Smartphones ', displayName: 'Smartphone' },
-    { id: 'Smart TVs', displayName: 'Smart TV' }
+    { id: 'Laptops', displayName: 'Laptop' },
+    { id: 'Smartphones', displayName: 'Smartphone' },
+    { id: 'Smart TVs', displayName: 'Smart TV' },
+    { id: 'Computadoras', displayName: 'Computadora' }
   ];
 function App() {
 

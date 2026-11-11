@@ -8,6 +8,10 @@ export default defineConfig({
     include: /src\/.*\.js$/,
     exclude: []
   },
+  build: {
+    outDir: 'build',
+    emptyOutDir: true
+  },
   test: {
     environment: 'jsdom',
     globals: true,
